@@ -11,6 +11,9 @@
 
 WiFiClientSecure secured_client;
 UniversalTelegramBot bot(BOT_TOKEN, secured_client);
+const unsigned long BOT_MTBS = 1000; // mean time between scan messages
+unsigned long bot_lasttime; // last time messages' scan has been done
+
 
 char wifiManagerSSID[] = "ESP32"; //define o nome da rede para se conectar na rede do ESP32
 
@@ -62,6 +65,8 @@ void setup() {
     delay(1000);
   }
 
+  secured_client.setCACert(TELEGRAM_CERTIFICATE_ROOT); // Add root certificate for api.telegram.org
+
 }
 
 void resetRede(){ //Essa função irá resetar a rede salva na memória ao pressionar o botão de reset do dispositivo, sendo necessário configurar novamente
@@ -85,7 +90,33 @@ void mensagem(){
   bot.sendMessage(CHAT_ID, "Botão pressionado", "");
 }
 
+void handleNewMessages(int numNewMessages){
+  for (int i = 0; i < numNewMessages; i++) {
+    String mensagemEnviada = bot.messages[i].text;
+
+    if (mensagemEnviada.startsWith("@seubot") or mensagemEnviada.indexOf("/teste") != -1){
+      mensagem();
+    }
+  }
+}
+
 void loop() {
+
+  
+  if (millis() - bot_lasttime > BOT_MTBS)
+  {
+    int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
+
+    while (numNewMessages)
+    {
+      Serial.println("got response");
+      handleNewMessages(numNewMessages);
+      numNewMessages = bot.getUpdates(bot.last_message_received + 1);
+    }
+
+    bot_lasttime = millis();
+  }
+
   
   if (digitalRead(botaoReset) == HIGH){ //Código relacionado ao botão de RESET
     Serial.println("Resetando...");
@@ -93,7 +124,7 @@ void loop() {
     lcd.setCursor(0,0);
     lcd.print("Resetando...");
     resetRede();
-    wifiManager.resetSettings();
+    //wifiManager.resetSettings();
     delay(1000);
     lcd.clear();
     ESP.restart();
@@ -123,3 +154,4 @@ void loop() {
  
   //delay(2000);
 }
+//show
