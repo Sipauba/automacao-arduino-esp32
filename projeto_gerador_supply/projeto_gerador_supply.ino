@@ -29,8 +29,11 @@ float R1 = 10000; // Resistor do termoresistor
 float logR2, R2, T; //Apenas declarando o tipo primitivo das variáveis que serão utilizadas
 float c1 = 0.001129148, c2 = 0.000234125, c3 = 0.0000000876741; // Coeficientes Steinhart-Hart
 
+const int microfone = 15; // Porta D15 (GPIO15) para leitura analógica
 
 void setup() {
+  pinMode(microfone,INPUT);
+  
   Serial.begin(115200);
   
   lcd.init(); //liga o display LCD
@@ -87,7 +90,7 @@ void mensagem(){
   }
   Serial.println(now);
 
-  bot.sendMessage(CHAT_ID, "Botão pressionado", "");
+  bot.sendMessage(CHAT_ID, "Barulho detectado", "");
 }
 
 void handleNewMessages(int numNewMessages){
@@ -143,7 +146,16 @@ void loop() {
   Serial.print("Temperatura: ");
   Serial.print(T);
   Serial.println("C");
-  delay(2000);
+  delay(1000);
+
+  int leitura = digitalRead(microfone);
+  //Serial.println(leitura);
+  if (leitura == HIGH) {
+    Serial.println("Porta analógica está em nível baixo (0).");
+  } else {
+    Serial.println("Porta analógica está em nível alto (1).");
+    mensagem();
+  }
 
   lcd.setCursor(0,0);
   lcd.print("Ger.: LIG/DES");
