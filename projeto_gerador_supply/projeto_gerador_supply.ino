@@ -150,7 +150,7 @@ void loop() {
 
   int leitura = digitalRead(microfone);
   //Serial.println(leitura);
-  if (leitura == HIGH) {
+  if (leitura == LOW) {
     Serial.println("Porta analógica está em nível baixo (0).");
   } else {
     Serial.println("Porta analógica está em nível alto (1).");
