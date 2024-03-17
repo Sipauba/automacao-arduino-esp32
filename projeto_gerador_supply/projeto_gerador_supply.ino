@@ -11,7 +11,7 @@
 
 WiFiClientSecure secured_client;
 UniversalTelegramBot bot(BOT_TOKEN, secured_client);
-const unsigned long BOT_MTBS = 1000; // mean time between scan messages
+const unsigned long BOT_MTBS = 10000; // mean time between scan messages
 unsigned long bot_lasttime; // last time messages' scan has been done
 
 
@@ -22,6 +22,8 @@ int lcdLinhas = 2;
 LiquidCrystal_I2C lcd(0x27, lcdColunas, lcdLinhas);
 
 const int botaoReset = 2; //porta D2 do ESP32
+
+int monitor_barulho = 0;
 
 //TERMISTOR
 const int analogInPin = 34; // Pino de entrada analógico
@@ -90,7 +92,7 @@ void mensagem(){
   }
   Serial.println(now);
 
-  bot.sendMessage(CHAT_ID, "Barulho detectado", "");
+  bot.sendMessage(CHAT_ID, "Gerador ligado!", "");
 }
 
 void handleNewMessages(int numNewMessages){
@@ -152,11 +154,17 @@ void loop() {
   //Serial.println(leitura);
   if (leitura == LOW) {
     Serial.println("Porta analógica está em nível baixo (0).");
-  } else {
+    monitor_barulho = 0;
+  } else if (leitura == HIGH and monitor_barulho == 1){
     Serial.println("Porta analógica está em nível alto (1).");
+    //mensagem();
+  } else if (leitura == HIGH and monitor_barulho ==0){
+    Serial.println("Gerador acabou de ligar");
+    monitor_barulho = 1;
     mensagem();
   }
-
+  
+  lcd.clear();
   lcd.setCursor(0,0);
   lcd.print("Ger.: LIG/DES");
   lcd.setCursor(0,1);
