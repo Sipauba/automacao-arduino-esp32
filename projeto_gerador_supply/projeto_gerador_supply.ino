@@ -23,7 +23,9 @@ LiquidCrystal_I2C lcd(0x27, lcdColunas, lcdLinhas);
 
 const int botaoReset = 2; //porta D2 do ESP32
 
-int monitor_barulho = 0;
+static bool monitorando_barulho = false;
+
+static unsigned long tempo_inicial; //Variável para armazenar o tempo inicial no monitoramento do barulho
 
 //TERMISTOR
 const int analogInPin = 34; // Pino de entrada analógico
@@ -151,6 +153,7 @@ void loop() {
   delay(1000);
 
   int leitura = digitalRead(microfone);
+  /*
   //Serial.println(leitura);
   if (leitura == LOW) {
     Serial.println("Porta analógica está em nível baixo (0).");
@@ -162,6 +165,20 @@ void loop() {
     Serial.println("Gerador acabou de ligar");
     monitor_barulho = 1;
     mensagem();
+  }
+  */
+  if (monitorando_barulho == false and leitura == LOW){
+    Serial.println("Sem barulho.");
+  }
+  if (monitorando_barulho == false and leitura == HIGH){
+    tempo_inicial = millis();
+    Serial.println("Começando a contagem...");
+    monitorando_barulho = true;
+  }
+  if (monitorando_barulho == true and leitura == HIGH){
+    if (millis() - tempo_inicial >= 5000){
+      Serial.println("Gerador ligado");
+    }
   }
   
   lcd.clear();
