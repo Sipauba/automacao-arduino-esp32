@@ -59,7 +59,7 @@ void setup() {
     lcd.setCursor(0,0);
     lcd.print("CONECTADO!");
     delay(1000);
-    //lcd.clear();
+    lcd.clear();
   } 
   else { // caso não se conecte em 10 segundos, será solicitado que faça a configuração da nova rede 
     lcd.clear();
@@ -147,43 +147,39 @@ void loop() {
   logR2 = log(R2);
   T = (1.0 / (c1 + c2*logR2 + c3*logR2*logR2*logR2)); // Cálculo da temperatura em graus Celsius
   T = T - 273.15; // Conversão para Celsius
+  
   Serial.print("Temperatura: ");
   Serial.print(T);
   Serial.println("C");
   delay(1000);
-
+  
   int leitura = digitalRead(microfone);
-  /*
-  //Serial.println(leitura);
-  if (leitura == LOW) {
-    Serial.println("Porta analógica está em nível baixo (0).");
-    monitor_barulho = 0;
-  } else if (leitura == HIGH and monitor_barulho == 1){
-    Serial.println("Porta analógica está em nível alto (1).");
-    //mensagem();
-  } else if (leitura == HIGH and monitor_barulho ==0){
-    Serial.println("Gerador acabou de ligar");
-    monitor_barulho = 1;
-    mensagem();
+
+  if (leitura == LOW and monitorando_barulho == false){
+    Serial.print("Gerador DESLIGADO.");
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Ger.: DESLIGADO");
   }
-  */
-  if (monitorando_barulho == false and leitura == LOW){
-    Serial.println("Sem barulho.");
-  }
-  if (monitorando_barulho == false and leitura == HIGH){
+
+  if (leitura == HIGH and monitorando_barulho == false){
     tempo_inicial = millis();
-    Serial.println("Começando a contagem...");
-    monitorando_barulho = true;
-  }
-  if (monitorando_barulho == true and leitura == HIGH){
+    Serial.print("Contando...");
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Ger.: CONTAGEM L");
     if (millis() - tempo_inicial >= 5000){
-      Serial.println("Gerador ligado");
+      Serial.print("Gerador LIGADO.");
+      monitorando_barulho = true;
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("Ger.: LIGADO");
     }
   }
-  
-  lcd.clear();
-  lcd.setCursor(0,0);
-  lcd.print("Ger.: LIG/DES");
+
+  //lcd.clear();
+  //lcd.setCursor(0,0);
+  //lcd.print("Ger.: LIG/DES");
   lcd.setCursor(0,1);
   lcd.print("Temp:       C");
   lcd.setCursor(6,1);
