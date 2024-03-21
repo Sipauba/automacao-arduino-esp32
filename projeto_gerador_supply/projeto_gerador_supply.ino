@@ -25,8 +25,8 @@ LiquidCrystal_I2C lcd(0x27, lcdColunas, lcdLinhas);
 const int botaoReset = 2; //porta D2 do ESP32
 
 static bool monitorando_barulho = false;
-
 static bool gerador_ligado = false;
+static bool gerador_desligando = false;
 
 //TERMISTOR
 const int analogInPin = 34; // Pino de entrada analógico
@@ -36,8 +36,7 @@ float c1 = 0.001129148, c2 = 0.000234125, c3 = 0.0000000876741; // Coeficientes 
 
 const int microfone = 15; // Porta D15 (GPIO15) para leitura analógica
 
-unsigned long tempo_atual = millis(); // Variável para controlar o tempo atual
-unsigned long tempo_contagem = tempo_atual; // Variável para controlar o tempo de contagem
+unsigned long tempo_contagem = 0; // Variável para controlar o tempo de contagem
 
 void setup() {
 
@@ -113,7 +112,6 @@ void handleNewMessages(int numNewMessages){
 }
 
 void loop() {
-
   
   if (millis() - bot_lasttime > BOT_MTBS)
   {
@@ -128,7 +126,6 @@ void loop() {
 
     bot_lasttime = millis();
   }
-
   
   if (digitalRead(botaoReset) == HIGH){ //Código relacionado ao botão de RESET
     Serial.println("Resetando...");
@@ -160,110 +157,39 @@ void loop() {
 
   int leitura = digitalRead(microfone);
 
-
-
-  if (monitorando_barulho == false and leitura == LOW){
+  if (leitura == LOW and monitorando_barulho == false and gerador_ligado == false){
+    Serial.println("Gerador DESLIGADO");;
     lcd.clear();
     lcd.setCursor(0,0);
     lcd.print("Ger.: DESLIGADO");
-    Serial.println("Gerador DESLIGADO");
-    Serial.print("Leitura: ");
-    Serial.println(leitura);
-    Serial.print("Monitorando barulho: ");
-    Serial.println(monitorando_barulho);
-    Serial.print("Gerador ligado: ");
-    Serial.println(gerador_ligado);
-    Serial.print("Tempo atual: ");
-    Serial.println(tempo_atual);
-    Serial.print("Tempo Contagem: ");
-    Serial.println(tempo_contagem);
   }
 
-  if (monitorando_barulho == false and leitura == HIGH){
-    tempo_contagem = tempo_atual;
+  if (leitura == HIGH and monitorando_barulho == false){
+    Serial.println("Iniciando contagem...");
     monitorando_barulho = true;
-    Serial.println("Contagem para Ligar");
-    Serial.println("Gerador DESLIGADO");
-    Serial.print("Leitura: ");
-    Serial.println(leitura);
-    Serial.print("Monitorando barulho: ");
-    Serial.println(monitorando_barulho);
-    Serial.print("Gerador ligado: ");
-    Serial.println(gerador_ligado);
-    Serial.print("Tempo atual: ");
-    Serial.println(tempo_atual);
-    Serial.print("Tempo Contagem: ");
-    Serial.println(tempo_contagem);
+    tempo_contagem = millis();
   }
 
-  if (monitorando_barulho == true and leitura == LOW and gerador_ligado == false){
-    Serial.println("Cancelando contagem para Ligar");
-    monitorando_barulho = false;
-    Serial.println("Gerador DESLIGADO");
-    Serial.print("Leitura: ");
-    Serial.println(leitura);
-    Serial.print("Monitorando barulho: ");
-    Serial.println(monitorando_barulho);
-    Serial.print("Gerador ligado: ");
-    Serial.println(gerador_ligado);
-    Serial.print("Tempo atual: ");
-    Serial.println(tempo_atual);
-    Serial.print("Tempo Contagem: ");
-    Serial.println(tempo_contagem);
-  }
-
-  if (monitorando_barulho == true and gerador_ligado == false and tempo_atual - tempo_contagem >= 5000){
+  if (monitorando_barulho == true and (millis() - tempo_contagem >= 5000)){
+    Serial.println("Gerador LIGADO");
     lcd.clear();
     lcd.setCursor(0,0);
     lcd.print("Ger.: LIGADO");
-    Serial.println("Gerador Ligado");
-    monitorando_barulho = false;
     gerador_ligado = true;
-    Serial.println("Gerador DESLIGADO");
-    Serial.print("Leitura: ");
-    Serial.println(leitura);
-    Serial.print("Monitorando barulho: ");
-    Serial.println(monitorando_barulho);
-    Serial.print("Gerador ligado: ");
-    Serial.println(gerador_ligado);
-    Serial.print("Tempo atual: ");
-    Serial.println(tempo_atual);
-    Serial.print("Tempo Contagem: ");
-    Serial.println(tempo_contagem);
   }
 
-  if (gerador_ligado == true and leitura == LOW){
-    Serial.println("Contagem para Desligar");
-    tempo_contagem = tempo_atual;
-    monitorando_barulho = true;
-    Serial.println("Gerador DESLIGADO");
-    Serial.print("Leitura: ");
-    Serial.println(leitura);
-    Serial.print("Monitorando barulho: ");
-    Serial.println(monitorando_barulho);
-    Serial.print("Gerador ligado: ");
-    Serial.println(gerador_ligado);
-    Serial.print("Tempo atual: ");
-    Serial.println(tempo_atual);
-    Serial.print("Tempo Contagem: ");
-    Serial.println(tempo_contagem);
-  }
-
-  if (monitorando_barulho == true and gerador_ligado == true and tempo_atual - tempo_contagem >= 5000){
-    Serial.println("Confirmado desligamento");
+  if (gerador_ligado == true and leitura == LOW and monitorando_barulho == true){
+    Serial.println("Contagem desligamento...");
+    tempo_contagem = millis();
+    gerador_desligando = true;
     monitorando_barulho = false;
+  }
+
+  if (gerador_desligando == true and (millis() - tempo_contagem >= 5000)){
+    Serial.println("Gerador DESLIGOU");
     gerador_ligado = false;
-    Serial.println("Gerador DESLIGADO");
-    Serial.print("Leitura: ");
-    Serial.println(leitura);
-    Serial.print("Monitorando barulho: ");
-    Serial.println(monitorando_barulho);
-    Serial.print("Gerador ligado: ");
-    Serial.println(gerador_ligado);
-    Serial.print("Tempo atual: ");
-    Serial.println(tempo_atual);
-    Serial.print("Tempo Contagem: ");
-    Serial.println(tempo_contagem);
+    monitorando_barulho = false;
+    gerador_desligando = false;
   }
 
   lcd.setCursor(0,1);
@@ -271,6 +197,5 @@ void loop() {
   lcd.setCursor(6,1);
   lcd.print(T);
  
-
 }
 
