@@ -86,7 +86,7 @@ void resetRede(){ //Essa função irá resetar a rede salva na memória ao press
   wifiManager.resetSettings();
 }
 
-void mensagem(){
+void mensagem(const char* texto){
   secured_client.setCACert(TELEGRAM_CERTIFICATE_ROOT); 
   Serial.print("Retrieving time: ");
   configTime(0, 0, "pool.ntp.org"); // get UTC time via NTP
@@ -98,7 +98,7 @@ void mensagem(){
   }
   Serial.println(now);
 
-  bot.sendMessage(CHAT_ID, "Gerador ligado!", "");
+  bot.sendMessage(CHAT_ID, texto, "");
 }
 
 void handleNewMessages(int numNewMessages){
@@ -106,7 +106,7 @@ void handleNewMessages(int numNewMessages){
     String mensagemEnviada = bot.messages[i].text;
 
     if (mensagemEnviada.startsWith("@seubot") or mensagemEnviada.indexOf("/teste") != -1){
-      mensagem();
+      mensagem("Testando \nQuebra \nde \nLinha");
     }
   }
 }
@@ -165,9 +165,10 @@ void loop() {
   }
 
   if (leitura == HIGH and monitorando_barulho == false){
-    Serial.println("Iniciando contagem...");
+    Serial.println("Contagem para ligar...");
     monitorando_barulho = true;
     tempo_contagem = millis();
+    mensagem("Contagem para ligar...");
   }
 
   if (monitorando_barulho == true and (millis() - tempo_contagem >= 5000)){
@@ -179,10 +180,11 @@ void loop() {
   }
 
   if (gerador_ligado == true and leitura == LOW and monitorando_barulho == true){
-    Serial.println("Contagem desligamento...");
+    Serial.println("Contagem para desligar...");
     tempo_contagem = millis();
     gerador_desligando = true;
     monitorando_barulho = false;
+    mensagem("Contagem para desligar...");
   }
 
   if (gerador_desligando == true and (millis() - tempo_contagem >= 5000)){
@@ -190,6 +192,7 @@ void loop() {
     gerador_ligado = false;
     monitorando_barulho = false;
     gerador_desligando = false;
+    mensagem("Gerador DESLIGOU.");
   }
 
   lcd.setCursor(0,1);
