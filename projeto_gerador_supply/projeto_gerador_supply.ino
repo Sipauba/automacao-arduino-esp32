@@ -157,6 +157,12 @@ void loop() {
 
   int leitura = digitalRead(microfone);
 
+
+  if (monitorando_barulho == true and leitura == LOW and gerador_ligado == false){
+    Serial.println("Contagem para ligar cancelada");
+    monitorando_barulho = false;
+  }
+
   if (leitura == LOW and monitorando_barulho == false and gerador_ligado == false){
     Serial.println("Gerador DESLIGADO");;
     lcd.clear();
@@ -166,9 +172,12 @@ void loop() {
 
   if (leitura == HIGH and monitorando_barulho == false){
     Serial.println("Contagem para ligar...");
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Ger.: LIGANDO");
     monitorando_barulho = true;
     tempo_contagem = millis();
-    mensagem("Contagem para ligar...");
+    //mensagem("Contagem para ligar...");
   }
 
   if (monitorando_barulho == true and (millis() - tempo_contagem >= 5000)){
@@ -181,10 +190,13 @@ void loop() {
 
   if (gerador_ligado == true and leitura == LOW and monitorando_barulho == true){
     Serial.println("Contagem para desligar...");
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("Ger.: DESLIGANDO");
     tempo_contagem = millis();
     gerador_desligando = true;
     monitorando_barulho = false;
-    mensagem("Contagem para desligar...");
+    //mensagem("Contagem para desligar...");
   }
 
   if (gerador_desligando == true and (millis() - tempo_contagem >= 5000)){
@@ -192,7 +204,7 @@ void loop() {
     gerador_ligado = false;
     monitorando_barulho = false;
     gerador_desligando = false;
-    mensagem("Gerador DESLIGOU.");
+    //mensagem("Gerador DESLIGOU.");
   }
 
   lcd.setCursor(0,1);
