@@ -28,6 +28,11 @@ static bool monitorando_barulho = false;
 static bool gerador_ligado = false;
 static bool gerador_desligando = false;
 
+static bool mensagem_gerador_ligado = false;
+static bool mensagem_energia_desligada = false;
+static bool mensagem_energia_ligada = false;
+static bool mensagem_status = false;
+
 //TERMISTOR
 const int analogInPin = 34; // Pino de entrada analógico
 float R1 = 10000; // Resistor do termoresistor
@@ -86,7 +91,7 @@ void resetRede(){ //Essa função irá resetar a rede salva na memória ao press
   wifiManager.resetSettings();
 }
 
-void mensagem(const char* texto){
+void mensagem(const char* texto1, const char* texto2){
   secured_client.setCACert(TELEGRAM_CERTIFICATE_ROOT); 
   Serial.print("Retrieving time: ");
   configTime(0, 0, "pool.ntp.org"); // get UTC time via NTP
@@ -98,7 +103,13 @@ void mensagem(const char* texto){
   }
   Serial.println(now);
 
-  bot.sendMessage(CHAT_ID, texto, "");
+  // Concatenando os dois textos em uma única mensagem
+  // Aqui estou assumindo que você quer concatenar texto1 e texto2 com um espaço entre eles
+  std::string mensagemCompleta = std::string(texto1) + " " + std::string(texto2);
+
+  bot.sendMessage(CHAT_ID, mensagemCompleta.c_str(), ""); // Enviando a mensagem concatenada
+
+  //bot.sendMessage(CHAT_ID, texto, "");
 }
 
 void handleNewMessages(int numNewMessages){
@@ -106,7 +117,15 @@ void handleNewMessages(int numNewMessages){
     String mensagemEnviada = bot.messages[i].text;
 
     if (mensagemEnviada.startsWith("@seubot") or mensagemEnviada.indexOf("/teste") != -1){
-      mensagem("Testando \nQuebra \nde \nLinha");
+      char temp[10]; // Ajuste o tamanho conforme necessário para o seu valor float
+      // Converte o valor float para uma string char
+      dtostrf(T, 6, 2, temp); // 6 é o número de caracteres totais (incluindo o ponto decimal e o sinal de menos, se houver), 2 é o número de casas decimais
+      if (mensagem_gerador_ligado == true){
+        mensagem("--------------------------------------------------\nGerador LIGADO \nTemperatura da sala: ", temp);
+      }
+      if(mensagem_gerador_ligado == false){
+        mensagem("--------------------------------------------------\nGerador DESLIGADO \nTemperatura da sala: ", temp);
+      }
     }
   }
 }
@@ -168,6 +187,14 @@ void loop() {
     lcd.clear();
     lcd.setCursor(0,0);
     lcd.print("Ger.: DESLIGADO");
+    if (mensagem_gerador_ligado == true){
+      //mensagem("Gerador desligado.","");
+      mensagem_gerador_ligado = false;
+      char temp[10]; // Ajuste o tamanho conforme necessário para o seu valor float
+      // Converte o valor float para uma string char
+      dtostrf(T, 6, 2, temp); // 6 é o número de caracteres totais (incluindo o ponto decimal e o sinal de menos, se houver), 2 é o número de casas decimais
+      mensagem("--------------------------------------------------\nGerador DESLIGADO \nTemperatura da sala: ", temp);
+    }
   }
 
   if (leitura == HIGH and monitorando_barulho == false){
@@ -186,6 +213,14 @@ void loop() {
     lcd.setCursor(0,0);
     lcd.print("Ger.: LIGADO");
     gerador_ligado = true;
+    if (mensagem_gerador_ligado == false){
+      //mensagem("Gerador ligado.","");
+      mensagem_gerador_ligado = true;
+      char temp[10]; // Ajuste o tamanho conforme necessário para o seu valor float
+      // Converte o valor float para uma string char
+      dtostrf(T, 6, 2, temp); // 6 é o número de caracteres totais (incluindo o ponto decimal e o sinal de menos, se houver), 2 é o número de casas decimais
+      mensagem("--------------------------------------------------\nGerador LIGADO \nTemperatura da sala: ", temp);
+    }
   }
 
   if (gerador_ligado == true and leitura == LOW and monitorando_barulho == true){
