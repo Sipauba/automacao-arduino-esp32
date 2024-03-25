@@ -91,7 +91,7 @@ void resetRede(){ //Essa função irá resetar a rede salva na memória ao press
   wifiManager.resetSettings();
 }
 
-void mensagem(const char* texto1, const char* texto2){
+void mensagem(const char* texto1, const char* texto2, const char* texto3){
   secured_client.setCACert(TELEGRAM_CERTIFICATE_ROOT); 
   Serial.print("Retrieving time: ");
   configTime(0, 0, "pool.ntp.org"); // get UTC time via NTP
@@ -105,7 +105,7 @@ void mensagem(const char* texto1, const char* texto2){
 
   // Concatenando os dois textos em uma única mensagem
   // Aqui estou assumindo que você quer concatenar texto1 e texto2 com um espaço entre eles
-  std::string mensagemCompleta = std::string(texto1) + " " + std::string(texto2);
+  std::string mensagemCompleta = std::string(texto1) + std::string(texto2) + std::string(texto3);
 
   bot.sendMessage(CHAT_ID, mensagemCompleta.c_str(), ""); // Enviando a mensagem concatenada
 
@@ -121,10 +121,10 @@ void handleNewMessages(int numNewMessages){
       // Converte o valor float para uma string char
       dtostrf(T, 6, 2, temp); // 6 é o número de caracteres totais (incluindo o ponto decimal e o sinal de menos, se houver), 2 é o número de casas decimais
       if (mensagem_gerador_ligado == true){
-        mensagem("--------------------------------------------------\nGerador LIGADO \nTemperatura da sala: ", temp);
+        mensagem("--------------------------------------------------\nGerador LIGADO \nTemperatura da sala: ", temp, "\nRede elétrica: XXXXXXX");
       }
       if(mensagem_gerador_ligado == false){
-        mensagem("--------------------------------------------------\nGerador DESLIGADO \nTemperatura da sala: ", temp);
+        mensagem("--------------------------------------------------\nGerador DESLIGADO \nTemperatura da sala: ", temp, "\nRede elétrica: XXXXXXX");
       }
     }
   }
@@ -176,7 +176,6 @@ void loop() {
 
   int leitura = digitalRead(microfone);
 
-
   if (monitorando_barulho == true and leitura == LOW and gerador_ligado == false){
     Serial.println("Contagem para ligar cancelada");
     monitorando_barulho = false;
@@ -193,7 +192,7 @@ void loop() {
       char temp[10]; // Ajuste o tamanho conforme necessário para o seu valor float
       // Converte o valor float para uma string char
       dtostrf(T, 6, 2, temp); // 6 é o número de caracteres totais (incluindo o ponto decimal e o sinal de menos, se houver), 2 é o número de casas decimais
-      mensagem("--------------------------------------------------\nGerador DESLIGADO \nTemperatura da sala: ", temp);
+      mensagem("--------------------------------------------------\nGerador DESLIGADO \nTemperatura da sala: ", temp, "");
     }
   }
 
@@ -219,7 +218,7 @@ void loop() {
       char temp[10]; // Ajuste o tamanho conforme necessário para o seu valor float
       // Converte o valor float para uma string char
       dtostrf(T, 6, 2, temp); // 6 é o número de caracteres totais (incluindo o ponto decimal e o sinal de menos, se houver), 2 é o número de casas decimais
-      mensagem("--------------------------------------------------\nGerador LIGADO \nTemperatura da sala: ", temp);
+      mensagem("--------------------------------------------------\nGerador LIGADO \nTemperatura da sala: ", temp, "");
     }
   }
 
