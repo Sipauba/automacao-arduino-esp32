@@ -24,6 +24,8 @@ LiquidCrystal_I2C lcd(0x27, lcdColunas, lcdLinhas);
 
 const int botaoReset = 2; //porta D2 do ESP32
 
+const int pinoEnergia = 25; //porta D5 GPIO5
+
 static bool monitorando_barulho = false;
 static bool gerador_ligado = false;
 static bool gerador_desligando = false;
@@ -46,6 +48,8 @@ unsigned long tempo_contagem = 0; // Variável para controlar o tempo de contage
 void setup() {
 
   pinMode(microfone,INPUT);
+
+  pinMode(pinoEnergia,INPUT);
   
   Serial.begin(115200);
   
@@ -116,15 +120,21 @@ void handleNewMessages(int numNewMessages){
   for (int i = 0; i < numNewMessages; i++) {
     String mensagemEnviada = bot.messages[i].text;
 
-    if (mensagemEnviada.startsWith("@seubot") or mensagemEnviada.indexOf("/teste") != -1){
+    if (mensagemEnviada.startsWith("@seubot") or mensagemEnviada.indexOf("/status") != -1){
       char temp[10]; // Ajuste o tamanho conforme necessário para o seu valor float
       // Converte o valor float para uma string char
       dtostrf(T, 6, 2, temp); // 6 é o número de caracteres totais (incluindo o ponto decimal e o sinal de menos, se houver), 2 é o número de casas decimais
-      if (mensagem_gerador_ligado == true){
-        mensagem("--------------------------------------------------\nGerador LIGADO \nTemperatura da sala: ", temp, "\nRede elétrica: XXXXXXX");
+      if (mensagem_gerador_ligado == true and mensagem_energia_desligada == false){
+        mensagem("--------------------------------------------------\nGerador LIGADO \nTemperatura da sala: ", temp, "\nRede elétrica: LIGADA");
       }
-      if(mensagem_gerador_ligado == false){
-        mensagem("--------------------------------------------------\nGerador DESLIGADO \nTemperatura da sala: ", temp, "\nRede elétrica: XXXXXXX");
+      if (mensagem_gerador_ligado == true and mensagem_energia_desligada == true){
+        mensagem("--------------------------------------------------\nGerador LIGADO \nTemperatura da sala: ", temp, "\nRede elétrica: DESLIGADA");
+      }
+      if (mensagem_gerador_ligado == false and mensagem_energia_desligada == false){
+        mensagem("--------------------------------------------------\nGerador DESLIGADO \nTemperatura da sala: ", temp, "\nRede elétrica: LIGADA");
+      }
+      if(mensagem_gerador_ligado == false and mensagem_energia_desligada == true){
+        mensagem("--------------------------------------------------\nGerador DESLIGADO \nTemperatura da sala: ", temp, "\nRede elétrica: DESLIGADA");
       }
     }
   }
@@ -174,6 +184,20 @@ void loop() {
   Serial.println("C");
   delay(1000);
 
+  int leitura_energia = digitalRead(pinoEnergia);
+
+  if (leitura_energia == LOW and mensagem_energia_desligada == false) {
+    Serial.println("Rede elétrtica DESLIGADA");
+    mensagem_energia_desligada = true;
+    mensagem("--------------------------------------------------\nRede elétrica DESLIGADA","","");
+  }
+
+  if (leitura_energia == HIGH and mensagem_energia_desligada == true){
+    Serial.println("Rede elétrica LIGADA");
+    mensagem_energia_desligada = false;
+    mensagem("--------------------------------------------------\nRede elétrica LIGADA","","");
+  }
+
   int leitura = digitalRead(microfone);
 
   if (monitorando_barulho == true and leitura == LOW and gerador_ligado == false){
@@ -182,10 +206,20 @@ void loop() {
   }
 
   if (leitura == LOW and monitorando_barulho == false and gerador_ligado == false){
-    Serial.println("Gerador DESLIGADO");;
+    Serial.println("Gerador DESLIGADO");
     lcd.clear();
     lcd.setCursor(0,0);
-    lcd.print("Ger.: DESLIGADO");
+    lcd.print("G: OFF");
+
+    if (mensagem_energia_desligada == false){
+      lcd.setCursor(7,0);
+      lcd.print("E: ON");
+    }
+    if (mensagem_energia_desligada == true){
+      lcd.setCursor(7,0);
+      lcd.print("E: OFF");
+    }
+
     if (mensagem_gerador_ligado == true){
       //mensagem("Gerador desligado.","");
       mensagem_gerador_ligado = false;
@@ -210,7 +244,15 @@ void loop() {
     Serial.println("Gerador LIGADO");
     lcd.clear();
     lcd.setCursor(0,0);
-    lcd.print("Ger.: LIGADO");
+    lcd.print("G: ON");
+    if (mensagem_energia_desligada == false){
+      lcd.setCursor(7,0);
+      lcd.print("E: ON");
+    }
+    if (mensagem_energia_desligada == true){
+      lcd.setCursor(7,0);
+      lcd.print("E: OFF");
+    }
     gerador_ligado = true;
     if (mensagem_gerador_ligado == false){
       //mensagem("Gerador ligado.","");
@@ -226,7 +268,15 @@ void loop() {
     Serial.println("Contagem para desligar...");
     lcd.clear();
     lcd.setCursor(0,0);
-    lcd.print("Ger.: DESLIGANDO");
+    lcd.print("G: OFF");
+    if (mensagem_energia_desligada == false){
+      lcd.setCursor(7,0);
+      lcd.print("E: ON");
+    }
+    if (mensagem_energia_desligada == true){
+      lcd.setCursor(7,0);
+      lcd.print("E: OFF");
+    }
     tempo_contagem = millis();
     gerador_desligando = true;
     monitorando_barulho = false;
@@ -240,6 +290,8 @@ void loop() {
     gerador_desligando = false;
     //mensagem("Gerador DESLIGOU.");
   }
+
+
 
   lcd.setCursor(0,1);
   lcd.print("Temp:       C");
