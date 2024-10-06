@@ -125,16 +125,16 @@ void handleNewMessages(int numNewMessages){
       // Converte o valor float para uma string char
       dtostrf(T, 6, 2, temp); // 6 é o número de caracteres totais (incluindo o ponto decimal e o sinal de menos, se houver), 2 é o número de casas decimais
       if (mensagem_gerador_ligado == true and mensagem_energia_desligada == false){
-        mensagem("--------------------------------------------------\nGerador LIGADO \nTemperatura da sala: ", temp, "\nRede elétrica: LIGADA");
+        mensagem("--------------------------------------------------\nGerador: LIGADO \nTemperatura da sala: ", temp, "\nRede elétrica: LIGADA");
       }
       if (mensagem_gerador_ligado == true and mensagem_energia_desligada == true){
-        mensagem("--------------------------------------------------\nGerador LIGADO \nTemperatura da sala: ", temp, "\nRede elétrica: DESLIGADA");
+        mensagem("--------------------------------------------------\nGerador: LIGADO \nTemperatura da sala: ", temp, "\nRede elétrica: DESLIGADA");
       }
       if (mensagem_gerador_ligado == false and mensagem_energia_desligada == false){
-        mensagem("--------------------------------------------------\nGerador DESLIGADO \nTemperatura da sala: ", temp, "\nRede elétrica: LIGADA");
+        mensagem("--------------------------------------------------\nGerador: DESLIGADO \nTemperatura da sala: ", temp, "\nRede elétrica: LIGADA");
       }
       if(mensagem_gerador_ligado == false and mensagem_energia_desligada == true){
-        mensagem("--------------------------------------------------\nGerador DESLIGADO \nTemperatura da sala: ", temp, "\nRede elétrica: DESLIGADA");
+        mensagem("--------------------------------------------------\nGerador: DESLIGADO \nTemperatura da sala: ", temp, "\nRede elétrica: DESLIGADA");
       }
     }
   }
@@ -189,13 +189,13 @@ void loop() {
   if (leitura_energia == LOW and mensagem_energia_desligada == false) {
     Serial.println("Rede elétrtica DESLIGADA");
     mensagem_energia_desligada = true;
-    mensagem("--------------------------------------------------\nRede elétrica DESLIGADA","","");
+    mensagem("--------------------------------------------------\nRede elétrica: DESLIGADA","","");
   }
 
   if (leitura_energia == HIGH and mensagem_energia_desligada == true){
     Serial.println("Rede elétrica LIGADA");
     mensagem_energia_desligada = false;
-    mensagem("--------------------------------------------------\nRede elétrica LIGADA","","");
+    mensagem("--------------------------------------------------\nRede elétrica: LIGADA","","");
   }
 
   int leitura = digitalRead(microfone);
@@ -226,7 +226,7 @@ void loop() {
       char temp[10]; // Ajuste o tamanho conforme necessário para o seu valor float
       // Converte o valor float para uma string char
       dtostrf(T, 6, 2, temp); // 6 é o número de caracteres totais (incluindo o ponto decimal e o sinal de menos, se houver), 2 é o número de casas decimais
-      mensagem("--------------------------------------------------\nGerador DESLIGADO \nTemperatura da sala: ", temp, "");
+      mensagem("--------------------------------------------------\nGerador: DESLIGADO \nTemperatura da sala: ", temp, "");
     }
   }
 
@@ -260,7 +260,7 @@ void loop() {
       char temp[10]; // Ajuste o tamanho conforme necessário para o seu valor float
       // Converte o valor float para uma string char
       dtostrf(T, 6, 2, temp); // 6 é o número de caracteres totais (incluindo o ponto decimal e o sinal de menos, se houver), 2 é o número de casas decimais
-      mensagem("--------------------------------------------------\nGerador LIGADO \nTemperatura da sala: ", temp, "");
+      mensagem("--------------------------------------------------\nGerador: LIGADO \nTemperatura da sala: ", temp, "");
     }
   }
 
@@ -290,8 +290,6 @@ void loop() {
     gerador_desligando = false;
     //mensagem("Gerador DESLIGOU.");
   }
-
-
 
   lcd.setCursor(0,1);
   lcd.print("Temp:       C");
